@@ -69,6 +69,7 @@ CompletionStamp &CommandMapUnmap::submit(uint32_t taskLevel, bool terminated) {
     size_t offset = queueCommandStream.getUsed();
 
     DispatchFlags dispatchFlags;
+    dispatchFlags.sliceCount = cmdQ.getSliceCount();
     dispatchFlags.blocking = blocking;
     dispatchFlags.dcFlush = true;
     dispatchFlags.useSLM = true;
@@ -211,6 +212,7 @@ CompletionStamp &CommandComputeKernel::submit(uint32_t taskLevel, bool terminate
     }
 
     DispatchFlags dispatchFlags;
+    dispatchFlags.sliceCount = commandQueue.getSliceCount();
     dispatchFlags.blocking = true;
     dispatchFlags.dcFlush = flushDC;
     dispatchFlags.useSLM = slmUsed;
@@ -254,6 +256,7 @@ CompletionStamp &CommandMarker::submit(uint32_t taskLevel, bool terminated) {
     size_t offset = queueCommandStream.getUsed();
 
     DispatchFlags dispatchFlags;
+    dispatchFlags.sliceCount = cmdQ.getSliceCount();
     dispatchFlags.blocking = blocking;
     dispatchFlags.dcFlush = shouldFlushDC(clCommandType, nullptr);
     dispatchFlags.lowPriority = cmdQ.getPriority() == QueuePriority::LOW;

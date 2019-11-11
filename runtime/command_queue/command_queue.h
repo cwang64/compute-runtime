@@ -27,6 +27,7 @@
 #include "runtime/helpers/properties_helper.h"
 #include "runtime/event/user_event.h"
 #include "runtime/os_interface/performance_counters.h"
+#include "runtime/command_stream/csr_definitions.h"
 #include <atomic>
 #include <cstdint>
 
@@ -406,6 +407,8 @@ class CommandQueue : public BaseObject<_cl_command_queue> {
     // virtual event that holds last Enqueue information
     Event *virtualEvent;
 
+    uint64_t getSliceCount() const { return sliceCount; }
+
   protected:
     void *enqueueReadMemObjForMap(TransferProperties &transferProperties, EventsRequest &eventsRequest, cl_int &errcodeRet);
     cl_int enqueueWriteMemObjForUnmap(MemObj *memObj, void *mappedPtr, EventsRequest &eventsRequest);
@@ -425,6 +428,7 @@ class CommandQueue : public BaseObject<_cl_command_queue> {
 
     QueuePriority priority;
     QueueThrottle throttle;
+    uint64_t sliceCount = QueueSliceCount::defaultSliceCount;
 
     bool perfCountersEnabled;
     cl_uint perfCountersConfig;

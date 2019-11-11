@@ -23,6 +23,7 @@
 #pragma once
 #include "igfxfmid.h"
 #include "runtime/utilities/api_intercept.h"
+#include "drm/i915_drm.h"
 
 #include <sys/ioctl.h>
 #include <fcntl.h>
@@ -32,8 +33,26 @@
 
 struct GT_SYSTEM_INFO;
 
+struct drm_i915_gem_context_param_sseu {
+    uint64_t flags;
+    union {
+        struct {
+            uint8_t slice_mask;
+            uint8_t subslice_mask;
+            uint8_t min_eu_per_subslice;
+            uint8_t max_eu_per_subslice;
+        } packed;
+        uint64_t value;
+    };
+};
+
 namespace OCLRT {
 #define I915_CONTEXT_PRIVATE_PARAM_BOOST 0x80000000
+/*
+ * When using the following param, value should be a pointer to
+ * drm_i915_gem_context_param_sseu.
+ */
+#define I915_CONTEXT_PARAM_SSEU		 0x6
 
 class DeviceFactory;
 struct HardwareInfo;
@@ -79,8 +98,14 @@ class Drm {
     MOCKABLE_VIRTUAL int getErrno();
     void setSimplifiedMocsTableUsage(bool value);
     bool getSimplifiedMocsTableUsage() const;
+    bool setQueueSliceCount(uint64_t sliceCount);
+    void checkQueueSliceSupport();
+    uint64_t getSliceMask(uint64_t sliceCount);
 
   protected:
+    int getQueueSliceCount(drm_i915_gem_context_param_sseu *sseu);
+    bool sliceCountChangeSupported = false;
+    drm_i915_gem_context_param_sseu sseu = {};
     bool useSimplifiedMocsTable = false;
     int fd;
     int deviceId;

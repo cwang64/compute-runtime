@@ -23,7 +23,6 @@
 #include "drm_neo.h"
 #include "runtime/os_interface/os_inc_base.h"
 #include "runtime/utilities/directory.h"
-#include "drm/i915_drm.h"
 
 #include <cstdio>
 #include <cstring>
@@ -155,6 +154,10 @@ bool Drm::hasPreemption() {
     return false;
 }
 
+void Drm::checkQueueSliceSupport() {
+    sliceCountChangeSupported = getQueueSliceCount(&sseu) == 0 ? true : false;
+}
+
 bool Drm::setLowPriority() {
 #if defined(I915_PARAM_HAS_PREEMPTION)
     struct drm_i915_gem_context_param gcp = {};
@@ -167,6 +170,34 @@ bool Drm::setLowPriority() {
         return true;
     }
 #endif
+    return false;
+}
+
+int Drm::getQueueSliceCount(drm_i915_gem_context_param_sseu *sseu) {
+    drm_i915_gem_context_param contextParam = {};
+    contextParam.param = I915_CONTEXT_PARAM_SSEU;
+    sseu->flags = I915_EXEC_RENDER;
+    contextParam.value = reinterpret_cast<uint64_t>(sseu);
+
+    int retVal = ioctl(DRM_IOCTL_I915_GEM_CONTEXT_GETPARAM, &contextParam);
+    return retVal;
+}
+
+uint64_t Drm::getSliceMask(uint64_t sliceCount) {
+    return static_cast<uint64_t>((1 << sliceCount) - 1);
+}
+bool Drm::setQueueSliceCount(uint64_t sliceCount) {
+    if (sliceCountChangeSupported) {
+        drm_i915_gem_context_param contextParam = {};
+        sseu.packed.slice_mask = getSliceMask(sliceCount);
+
+        contextParam.param = I915_CONTEXT_PARAM_SSEU;
+        contextParam.value = reinterpret_cast<uint64_t>(&sseu);
+        int retVal = ioctl(DRM_IOCTL_I915_GEM_CONTEXT_SETPARAM, &contextParam);
+        if (retVal == 0) {
+            return true;
+        }
+    }
     return false;
 }
 

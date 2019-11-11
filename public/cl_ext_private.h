@@ -48,3 +48,13 @@
  * ****************************************/
 /* performance counter */
 #define CL_PROFILING_COMMAND_PERFCOUNTERS_INTEL 0x407F
+
+/*******************************
+ *    SLICE COUNT SELECTING    *
+*******************************/
+
+/* cl_device_info */
+#define CL_DEVICE_SLICE_COUNT_INTEL 0x10020
+
+/* cl_queue_properties */
+#define CL_QUEUE_SLICE_COUNT_INTEL 0x10021

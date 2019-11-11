@@ -175,6 +175,7 @@ int HwInfoConfig::configureHwInfo(const HardwareInfo *inHwInfo, HardwareInfo *ou
     outHwInfo->capabilityTable.ftrRenderCompressedBuffers = false;
     outHwInfo->capabilityTable.ftrRenderCompressedImages = false;
 
+    drm->checkQueueSliceSupport();
     bool preemption = drm->hasPreemption();
     preemption = hwHelper.setupPreemptionRegisters(outHwInfo, preemption);
     PreemptionHelper::adjustDefaultPreemptionMode(outHwInfo->capabilityTable,

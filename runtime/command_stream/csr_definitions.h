@@ -43,7 +43,12 @@ namespace TimeoutControls {
 constexpr int64_t maxTimeout = std::numeric_limits<int64_t>::max();
 }
 
+namespace QueueSliceCount {
+constexpr uint64_t defaultSliceCount = 0;
+}
+
 struct DispatchFlags {
+    uint64_t sliceCount = QueueSliceCount::defaultSliceCount;
     bool blocking = false;
     bool dcFlush = false;
     bool useSLM = false;

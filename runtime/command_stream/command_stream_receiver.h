@@ -179,6 +179,7 @@ class CommandStreamReceiver {
     int8_t lastMediaSamplerConfig = -1;
     PreemptionMode lastPreemptionMode = PreemptionMode::Initial;
     uint32_t latestSentStatelessMocsConfig = 0;
+    uint64_t lastSentSliceCount = QueueSliceCount::defaultSliceCount;
 
     LinearStream commandStream;
 

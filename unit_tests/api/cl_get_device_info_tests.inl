@@ -66,6 +66,36 @@ TEST_F(clGetDeviceInfoTests, NullDevice) {
     EXPECT_NE(CL_SUCCESS, retVal);
 }
 
+TEST_F(clGetDeviceInfoTests, givenNeoDeviceWhenAskedForSliceCountThenNumberOfSlicesIsReturned) {
+    cl_device_info paramName = 0;
+    size_t paramSize = 0;
+    void *paramValue = nullptr;
+    size_t paramRetSize = 0;
+
+    size_t numSlices = 0;
+    paramName = CL_DEVICE_SLICE_COUNT_INTEL;
+
+    retVal = clGetDeviceInfo(
+        devices[0],
+        paramName,
+        0,
+        nullptr,
+        &paramRetSize);
+
+    EXPECT_EQ(sizeof(size_t), paramRetSize);
+    paramSize = paramRetSize;
+    paramValue = &numSlices;
+
+    retVal = clGetDeviceInfo(
+        devices[0],
+        paramName,
+        paramSize,
+        paramValue,
+        &paramRetSize);
+
+    EXPECT_EQ(platformDevices[0]->pSysInfo->SliceCount, numSlices);
+}
+
 TEST_F(clGetDeviceInfoTests, givenOpenCLDeviceWhenAskedForSupportedSvmTypeCorrectValueIsReturned) {
 
     cl_device_svm_capabilities svmCaps;

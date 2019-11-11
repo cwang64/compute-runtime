@@ -22,11 +22,9 @@
 
 #include "cl_api_tests.h"
 #include "CL/cl_ext.h"
-#include "runtime/context/context.h"
 #include "runtime/command_queue/command_queue.h"
 #include "runtime/device/device.h"
 #include "runtime/device_queue/device_queue.h"
-#include "runtime/helpers/base_object.h"
 #include "unit_tests/fixtures/memory_management_fixture.h"
 #include "unit_tests/mocks/mock_context.h"
 

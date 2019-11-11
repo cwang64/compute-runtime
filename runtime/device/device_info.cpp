@@ -178,6 +178,7 @@ cl_int Device::getDeviceInfo(cl_device_info paramName,
     case CL_DEVICE_QUEUE_ON_DEVICE_PROPERTIES:                getCap<CL_DEVICE_QUEUE_ON_DEVICE_PROPERTIES                >(src, srcSize, retSize); break;
     case CL_DEVICE_QUEUE_ON_HOST_PROPERTIES:                  getCap<CL_DEVICE_QUEUE_ON_HOST_PROPERTIES                  >(src, srcSize, retSize); break;
     case CL_DEVICE_SINGLE_FP_CONFIG:                          getCap<CL_DEVICE_SINGLE_FP_CONFIG                          >(src, srcSize, retSize); break;
+    case CL_DEVICE_SLICE_COUNT_INTEL:                         getCap<CL_DEVICE_SLICE_COUNT_INTEL                         >(src, srcSize, retSize); break;
     case CL_DEVICE_SPIR_VERSIONS:                             getStr<CL_DEVICE_SPIR_VERSIONS                             >(src, srcSize, retSize); break;
     case CL_DEVICE_SUB_GROUP_INDEPENDENT_FORWARD_PROGRESS:    getCap<CL_DEVICE_SUB_GROUP_INDEPENDENT_FORWARD_PROGRESS    >(src, srcSize, retSize); break;
     case CL_DEVICE_SUB_GROUP_SIZES_INTEL:                     getCap<CL_DEVICE_SUB_GROUP_SIZES_INTEL                     >(src, srcSize, retSize); break;

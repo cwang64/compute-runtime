@@ -553,6 +553,7 @@ CompletionStamp CommandQueueHw<GfxFamily>::enqueueNonBlocked(
     commandStreamReceiver.requestThreadArbitrationPolicy(multiDispatchInfo.begin()->getKernel()->getThreadArbitrationPolicy<GfxFamily>());
 
     DispatchFlags dispatchFlags;
+    dispatchFlags.sliceCount = getSliceCount();
     dispatchFlags.blocking = blocking;
     dispatchFlags.dcFlush = shouldFlushDC(commandType, printfHandler);
     dispatchFlags.useSLM = slmUsed;

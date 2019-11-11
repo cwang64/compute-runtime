@@ -35,6 +35,7 @@ struct DeviceInfo {
     size_t                       maxWorkGroupSize;
     cl_uint                      maxNumOfSubGroups;
     size_t                       maxNumEUsPerSubSlice;
+    size_t                       maxSliceCount;
     size_t                       maxSubGroups[3];
     cl_bool                      independentForwardProgress;
     cl_uint                      preferredVectorWidthChar;
