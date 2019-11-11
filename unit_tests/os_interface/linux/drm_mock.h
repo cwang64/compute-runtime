@@ -31,14 +31,20 @@
 
 #include <cstdio>
 #include <fstream>
+#include <limits.h>
 
 using namespace OCLRT;
 
-static const int mockFd = 33;
 // Mock DRM class that responds to DRM_IOCTL_I915_GETPARAMs
 class DrmMock : public Drm {
   public:
+    static const int mockFd = 33;
+    using Drm::checkQueueSliceSupport;
+    using Drm::getQueueSliceCount;
+    using Drm::sliceCountChangeSupported;
+
     DrmMock() : Drm(mockFd) {
+        sliceCountChangeSupported = true;
         sysFsDefaultGpuPathToRestore = nullptr;
     }
 
@@ -134,18 +140,35 @@ class DrmMock : public Drm {
             create->ctx_id = this->StoredCtxId;
             return this->StoredRetVal;
         }
+#endif
 
         if ((request == DRM_IOCTL_I915_GEM_CONTEXT_SETPARAM) && (arg != nullptr)) {
             drm_i915_gem_context_param *gp = (drm_i915_gem_context_param *)arg;
+#if defined(I915_PARAM_HAS_PREEMPTION)
             if ((gp->param == I915_CONTEXT_PARAM_PRIORITY) && (gp->ctx_id == this->StoredCtxId)) {
                 EXPECT_EQ(0u, gp->size);
                 return this->StoredRetVal;
             }
+#endif
             if ((gp->param == I915_CONTEXT_PRIVATE_PARAM_BOOST) && (gp->value == 1)) {
                 return this->StoredRetVal;
             }
+            if (gp->param == I915_CONTEXT_PARAM_SSEU) {
+                if (StoredRetValForSetSSEU == 0) {
+                    storedParamSseu = (*static_cast<drm_i915_gem_context_param_sseu *>(reinterpret_cast<void *>(gp->value))).packed.slice_mask;
+                }
+                return this->StoredRetValForSetSSEU;
+            }
         }
-#endif
+        if ((request == DRM_IOCTL_I915_GEM_CONTEXT_GETPARAM) && (arg != nullptr)) {
+            drm_i915_gem_context_param *gp = (drm_i915_gem_context_param *)arg;
+            if (gp->param == I915_CONTEXT_PARAM_SSEU) {
+                if (StoredRetValForGetSSEU == 0) {
+                    (*static_cast<drm_i915_gem_context_param_sseu *>(reinterpret_cast<void *>(gp->value))).packed.slice_mask = storedParamSseu;
+                }
+                return this->StoredRetValForGetSSEU;
+            }
+        }
         if (request == DRM_IOCTL_I915_GEM_EXECBUFFER2) {
             drm_i915_gem_execbuffer2 *execbuf = (drm_i915_gem_execbuffer2 *)arg;
             this->execBuffer = *execbuf;
@@ -232,6 +255,8 @@ class DrmMock : public Drm {
     int StoredHasPooledEU = 1;
     int StoredMinEUinPool = 1;
     int StoredRetVal = 0;
+    int StoredRetValForGetSSEU = 0;
+    int StoredRetValForSetSSEU = 0;
     int StoredRetValForDeviceID = 0;
     int StoredRetValForEUVal = 0;
     int StoredRetValForSSVal = 0;
@@ -260,6 +285,8 @@ class DrmMock : public Drm {
     //DRM_IOCTL_I915_GEM_USERPTR
     __u32 returnHandle = 0;
     __u64 gpuMemSize = 3u * MemoryConstants::gigaByte;
+
+    uint64_t storedParamSseu = ULONG_MAX;
 
   private:
     const char *sysFsDefaultGpuPathToRestore;

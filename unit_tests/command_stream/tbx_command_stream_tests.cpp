@@ -103,7 +103,7 @@ TEST_F(TbxCommandStreamTests, DISABLED_flush) {
     memset(buffer, 0, 4096);
     LinearStream cs(buffer, 4096);
     size_t startOffset = 0;
-    BatchBuffer batchBuffer{cs.getGraphicsAllocation(), startOffset, 0, nullptr, false, false, QueueThrottle::MEDIUM, cs.getUsed(), &cs};
+    BatchBuffer batchBuffer{cs.getGraphicsAllocation(), startOffset, 0, nullptr, false, false, QueueThrottle::MEDIUM, QueueSliceCount::defaultSliceCount, cs.getUsed(), &cs};
     pCommandStreamReceiver->flush(batchBuffer, EngineType::ENGINE_RCS, nullptr);
 }
 
@@ -115,7 +115,7 @@ HWTEST_F(TbxCommandStreamTests, DISABLED_flushUntilTailRCSLargerThanSizeRCS) {
     TbxCommandStreamReceiverHw<FamilyType> *tbxCsr = (TbxCommandStreamReceiverHw<FamilyType> *)pCommandStreamReceiver;
     auto &engineInfo = tbxCsr->engineInfoTable[EngineType::ENGINE_RCS];
 
-    BatchBuffer batchBuffer{cs.getGraphicsAllocation(), startOffset, 0, nullptr, false, false, QueueThrottle::MEDIUM, cs.getUsed(), &cs};
+    BatchBuffer batchBuffer{cs.getGraphicsAllocation(), startOffset, 0, nullptr, false, false, QueueThrottle::MEDIUM, QueueSliceCount::defaultSliceCount, cs.getUsed(), &cs};
     pCommandStreamReceiver->flush(batchBuffer, EngineType::ENGINE_RCS, nullptr);
     auto size = engineInfo.sizeRCS;
     engineInfo.sizeRCS = 64;
@@ -281,7 +281,7 @@ HWTEST_F(TbxCommandStreamTests, givenTbxCommandStreamReceiverWhenFlushIsCalledTh
     ASSERT_NE(nullptr, commandBuffer);
 
     LinearStream cs(commandBuffer);
-    BatchBuffer batchBuffer{cs.getGraphicsAllocation(), 0, 0, nullptr, false, false, QueueThrottle::MEDIUM, cs.getUsed(), &cs};
+    BatchBuffer batchBuffer{cs.getGraphicsAllocation(), 0, 0, nullptr, false, false, QueueThrottle::MEDIUM, QueueSliceCount::defaultSliceCount, cs.getUsed(), &cs};
     auto engineType = OCLRT::ENGINE_RCS;
     ResidencyContainer allocationsForResidency = {graphicsAllocation};
 

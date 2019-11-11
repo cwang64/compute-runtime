@@ -69,6 +69,12 @@ FlushStamp DrmCommandStreamReceiver<GfxFamily>::flush(BatchBuffer &batchBuffer, 
     FlushStamp flushStamp = 0;
 
     if (bb) {
+        if (this->lastSentSliceCount != batchBuffer.sliceCount) {
+            if (drm->setQueueSliceCount(batchBuffer.sliceCount)) {
+                this->lastSentSliceCount = batchBuffer.sliceCount;
+            }
+        }
+
         flushStamp = bb->peekHandle();
         this->processResidency(allocationsForResidency);
         // Residency hold all allocation except command buffer, hence + 1

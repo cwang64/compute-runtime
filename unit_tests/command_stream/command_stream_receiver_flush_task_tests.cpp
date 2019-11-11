@@ -3200,3 +3200,35 @@ HWTEST_F(CommandStreamReceiverFlushTaskTests, givenDispatchFlagsWithThrottleSetT
 
     EXPECT_EQ(cmdBuffer->batchBuffer.throttle, QueueThrottle::HIGH);
 }
+
+HWTEST_F(CommandStreamReceiverFlushTaskTests, givenDispatchFlagsWithNewSliceCountWhenFlushTaskThenNewSliceCountIsSet) {
+    typedef typename FamilyType::MI_BATCH_BUFFER_END MI_BATCH_BUFFER_END;
+    CommandQueueHw<FamilyType> commandQueue(nullptr, pDevice, 0);
+    auto &commandStream = commandQueue.getCS(4096u);
+
+    auto mockCsr = new MockCsrHw2<FamilyType>(*platformDevices[0], *pDevice->executionEnvironment);
+    pDevice->resetCommandStreamReceiver(mockCsr);
+
+    mockCsr->overrideDispatchPolicy(DispatchMode::BatchedDispatch);
+
+    auto mockedSubmissionsAggregator = new mockSubmissionsAggregator();
+    mockCsr->overrideSubmissionAggregator(mockedSubmissionsAggregator);
+
+    uint64_t newSliceCount = 1;
+    DispatchFlags dispatchFlags;
+    dispatchFlags.sliceCount = newSliceCount;
+
+    mockCsr->flushTask(commandStream,
+                       0,
+                       dsh,
+                       ioh,
+                       ssh,
+                       taskLevel,
+                       dispatchFlags,
+                       *pDevice);
+
+    auto &cmdBufferList = mockedSubmissionsAggregator->peekCommandBuffers();
+    auto cmdBuffer = cmdBufferList.peekHead();
+
+    EXPECT_EQ(cmdBuffer->batchBuffer.sliceCount, newSliceCount);
+}

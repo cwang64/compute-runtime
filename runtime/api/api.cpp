@@ -3879,7 +3879,8 @@ cl_command_queue CL_API_CALL clCreateCommandQueueWithProperties(cl_context conte
         if (tokenValue != CL_QUEUE_PROPERTIES &&
             tokenValue != CL_QUEUE_SIZE &&
             tokenValue != CL_QUEUE_PRIORITY_KHR &&
-            tokenValue != CL_QUEUE_THROTTLE_KHR) {
+            tokenValue != CL_QUEUE_THROTTLE_KHR &&
+            tokenValue != CL_QUEUE_SLICE_COUNT_INTEL) {
             err.set(CL_INVALID_VALUE);
             return commandQueue;
         }
@@ -3927,6 +3928,11 @@ cl_command_queue CL_API_CALL clCreateCommandQueueWithProperties(cl_context conte
             err.set(CL_INVALID_QUEUE_PROPERTIES);
             return commandQueue;
         }
+    }
+
+    if (getCmdQueueProperties<cl_command_queue_properties>(properties, CL_QUEUE_SLICE_COUNT_INTEL) > pDevice->getDeviceInfo().maxSliceCount) {
+        err.set(CL_INVALID_QUEUE_PROPERTIES);
+        return commandQueue;
     }
 
     auto maskedFlags = commandQueueProperties & minimumCreateDeviceQueueFlags;
