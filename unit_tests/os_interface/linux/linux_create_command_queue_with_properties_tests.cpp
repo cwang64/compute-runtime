@@ -9,7 +9,6 @@
 #include "runtime/os_interface/linux/os_interface.h"
 #include "test.h"
 #include "unit_tests/fixtures/ult_command_stream_receiver_fixture.h"
-#include "unit_tests/mocks/linux/mock_drm_command_stream_receiver.h"
 #include "unit_tests/mocks/linux/mock_drm_memory_manager.h"
 #include "unit_tests/mocks/mock_context.h"
 #include "unit_tests/os_interface/linux/drm_mock.h"
@@ -18,12 +17,8 @@
 using namespace OCLRT;
 
 struct clCreateCommandQueueWithPropertiesLinux : public UltCommandStreamReceiverTest {
-  public:
-    //DrmMockCustom *mock;
-    
     void SetUp() override {
         UltCommandStreamReceiverTest::SetUp();
-        //mock = new DrmMockCustom();
         ExecutionEnvironment *executionEnvironment = new ExecutionEnvironment();
         auto osInterface = new OSInterface();
         osInterface->get()->setDrm(drm.get());
@@ -36,7 +31,6 @@ struct clCreateCommandQueueWithPropertiesLinux : public UltCommandStreamReceiver
         context = std::unique_ptr<Context>(Context::create<MockContext>(nullptr, DeviceVector(&clDevice, 1), nullptr, nullptr, retVal));
     }
     void TearDown() override {
-        //delete mock;
         UltCommandStreamReceiverTest::TearDown();
     }
     std::unique_ptr<DrmMock> drm = std::make_unique<DrmMock>();
@@ -112,141 +106,5 @@ TEST_F(clCreateCommandQueueWithPropertiesLinux, givenPossiblePropertiesWithClQue
     retVal = clReleaseCommandQueue(cmdQ);
     EXPECT_EQ(CL_SUCCESS, retVal);
 }
-/*
-HWTEST_F(clCreateCommandQueueWithPropertiesLinux, givenPropertiesWithClQueueSliceCountWhenCreateCommandQueueThenCallFlushTaskAndSliceCountIsSet) {
-    uint64_t newSliceCount = 1;
-    size_t maxSliceCount;
-    clGetDeviceInfo(clDevice, CL_DEVICE_SLICE_COUNT_INTEL, sizeof(size_t), &maxSliceCount, nullptr);
-    if (maxSliceCount > 1) {
-        newSliceCount = maxSliceCount - 1;
-    }
-
-    cl_queue_properties properties[] = {CL_QUEUE_SLICE_COUNT_INTEL, newSliceCount, 0};
-    //std::unique_ptr<DrmMock> drmMock = std::make_unique<DrmMock>();
-    std::unique_ptr<DrmMockCustom> drmMock(new DrmMockCustom());
-
-    auto mockCsr = new TestedDrmCommandStreamReceiver<FamilyType>(drmMock.get(), *mdevice->executionEnvironment);
-    //auto mockCsr = new TestedDrmCommandStreamReceiver<DEFAULT_TEST_FAMILY_NAME>(mock, *mdevice->executionEnvironment);
-    mdevice->resetCommandStreamReceiver(mockCsr);
-
-    cl_command_queue cmdQ = clCreateCommandQueueWithProperties(context.get(), clDevice, properties, &retVal);
-
-    ASSERT_NE(nullptr, cmdQ);
-    ASSERT_EQ(CL_SUCCESS, retVal);
-
-    auto commandQueue = castToObject<CommandQueueHw<FamilyType>>(cmdQ);
-    auto &commandStream = commandQueue->getCS(1024u);
-
-    DispatchFlags dispatchFlags;
-    dispatchFlags.sliceCount = commandQueue->getSliceCount();
-
-    mockCsr->flushTask(commandStream,
-                       0u,
-                       dsh,
-                       ioh,
-                       ssh,
-                       taskLevel,
-                       dispatchFlags,
-                       *mdevice);
-    auto expectedSliceMask = drm->getSliceMask(newSliceCount);
-    EXPECT_EQ(expectedSliceMask, drm->storedParamSseu);
-    drm_i915_gem_context_param_sseu sseu = {};
-    EXPECT_EQ(0, drm->getQueueSliceCount(&sseu));
-    EXPECT_EQ(expectedSliceMask, sseu.packed.slice_mask);
-    EXPECT_EQ(newSliceCount, mockCsr->lastSentSliceCount);
-
-    retVal = clReleaseCommandQueue(cmdQ);
-    EXPECT_EQ(CL_SUCCESS, retVal);
-}
-
-HWTEST_F(clCreateCommandQueueWithPropertiesLinux, givenSameSliceCountAsRecentlySetWhenCreateCommandQueueThenSetQueueSliceCountNotCalled) {
-    uint64_t newSliceCount = 1;
-    size_t maxSliceCount;
-
-    clGetDeviceInfo(clDevice, CL_DEVICE_SLICE_COUNT_INTEL, sizeof(size_t), &maxSliceCount, nullptr);
-    if (maxSliceCount > 1) {
-        newSliceCount = maxSliceCount - 1;
-    }
-
-    cl_queue_properties properties[] = {CL_QUEUE_SLICE_COUNT_INTEL, newSliceCount, 0};
-    std::unique_ptr<DrmMock> drmMock = std::make_unique<DrmMock>();
-
-    //auto mockCsr = new TestedDrmCommandStreamReceiver<FamilyType>(drmMock.get(), *mdevice->executionEnvironment);
-    auto mockCsr = new TestedDrmCommandStreamReceiver<DEFAULT_TEST_FAMILY_NAME>(mock, *mdevice->executionEnvironment);
-    mdevice->resetCommandStreamReceiver(mockCsr);
-
-    cl_command_queue cmdQ = clCreateCommandQueueWithProperties(context.get(), clDevice, properties, &retVal);
-
-    ASSERT_NE(nullptr, cmdQ);
-    ASSERT_EQ(CL_SUCCESS, retVal);
-
-    auto commandQueue = castToObject<CommandQueueHw<FamilyType>>(cmdQ);
-    auto &commandStream = commandQueue->getCS(1024u);
-
-    DispatchFlags dispatchFlags;
-    dispatchFlags.sliceCount = commandQueue->getSliceCount();
-
-    mockCsr->lastSentSliceCount = newSliceCount;
-    mockCsr->flushTask(commandStream,
-                       0u,
-                       dsh,
-                       ioh,
-                       ssh,
-                       taskLevel,
-                       dispatchFlags,
-                       *mdevice);
-    auto expectedSliceMask = drm->getSliceMask(newSliceCount);
-    EXPECT_NE(expectedSliceMask, drm->storedParamSseu);
-    drm_i915_gem_context_param_sseu sseu = {};
-    EXPECT_EQ(0, drm->getQueueSliceCount(&sseu));
-    EXPECT_NE(expectedSliceMask, sseu.packed.slice_mask);
-
-    retVal = clReleaseCommandQueue(cmdQ);
-    EXPECT_EQ(CL_SUCCESS, retVal);
-}
-
-HWTEST_F(clCreateCommandQueueWithPropertiesLinux, givenPropertiesWithClQueueSliceCountWhenCreateCommandQueueThenSetReturnFalseAndLastSliceCountNotModify) {
-    uint64_t newSliceCount = 1;
-    size_t maxSliceCount;
-    clGetDeviceInfo(clDevice, CL_DEVICE_SLICE_COUNT_INTEL, sizeof(size_t), &maxSliceCount, nullptr);
-    if (maxSliceCount > 1) {
-        newSliceCount = maxSliceCount - 1;
-    }
-
-    cl_queue_properties properties[] = {CL_QUEUE_SLICE_COUNT_INTEL, newSliceCount, 0};
-    std::unique_ptr<DrmMock> drmMock = std::make_unique<DrmMock>();
-
-    //auto mockCsr = new TestedDrmCommandStreamReceiver<FamilyType>(drmMock.get(), *mdevice->executionEnvironment);
-    auto mockCsr = new TestedDrmCommandStreamReceiver<DEFAULT_TEST_FAMILY_NAME>(mock, *mdevice->executionEnvironment);
-    mdevice->resetCommandStreamReceiver(mockCsr);
-
-    cl_command_queue cmdQ = clCreateCommandQueueWithProperties(context.get(), clDevice, properties, &retVal);
-
-    ASSERT_NE(nullptr, cmdQ);
-    ASSERT_EQ(CL_SUCCESS, retVal);
-
-    auto commandQueue = castToObject<CommandQueueHw<FamilyType>>(cmdQ);
-    auto &commandStream = commandQueue->getCS(1024u);
-
-    DispatchFlags dispatchFlags;
-    dispatchFlags.sliceCount = commandQueue->getSliceCount();
-    drm->StoredRetValForSetSSEU = -1;
-
-    auto lastSliceCountBeforeFlushTask = mockCsr->lastSentSliceCount;
-    mockCsr->flushTask(commandStream,
-                       0u,
-                       dsh,
-                       ioh,
-                       ssh,
-                       taskLevel,
-                       dispatchFlags,
-                       *mdevice);
-
-    EXPECT_NE(newSliceCount, mockCsr->lastSentSliceCount);
-    EXPECT_EQ(lastSliceCountBeforeFlushTask, mockCsr->lastSentSliceCount);
-
-    retVal = clReleaseCommandQueue(cmdQ);
-    EXPECT_EQ(CL_SUCCESS, retVal);
-}*/
 
 } // namespace ULT
