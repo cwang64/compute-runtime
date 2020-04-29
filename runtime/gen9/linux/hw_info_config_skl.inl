@@ -32,12 +32,6 @@ int HwInfoConfigHw<IGFX_SKYLAKE>::configureHardwareCustom(HardwareInfo *hwInfo, 
     GT_SYSTEM_INFO *pSysInfo = const_cast<GT_SYSTEM_INFO *>(hwInfo->pSysInfo);
     WorkaroundTable *pWaTable = const_cast<WorkaroundTable *>(hwInfo->pWaTable);
 
-    if (pSysInfo->SubSliceCount > 3) {
-        pSysInfo->SliceCount = 2;
-    } else {
-        pSysInfo->SliceCount = 1;
-    }
-
     pSysInfo->VEBoxInfo.Instances.Bits.VEBox0Enabled = 1;
     pSysInfo->VDBoxInfo.Instances.Bits.VDBox0Enabled = 1;
     pSysInfo->VEBoxInfo.IsValid = true;
