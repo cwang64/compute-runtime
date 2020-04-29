@@ -158,7 +158,7 @@ SKLTEST_F(HwInfoConfigTestLinuxSkl, configureHwInfo) {
     EXPECT_EQ((unsigned short)drm->StoredDeviceRevID, outHwInfo.pPlatform->usRevId);
     EXPECT_EQ((uint32_t)drm->StoredEUVal, outHwInfo.pSysInfo->EUCount);
     EXPECT_EQ((uint32_t)drm->StoredSSVal, outHwInfo.pSysInfo->SubSliceCount);
-    EXPECT_EQ(2u, outHwInfo.pSysInfo->SliceCount);
+    EXPECT_EQ(1u, outHwInfo.pSysInfo->SliceCount);
     EXPECT_EQ(EngineType::ENGINE_RCS, outHwInfo.capabilityTable.defaultEngineType);
 
     EXPECT_EQ(GTTYPE_GT4, outHwInfo.pPlatform->eGTType);
